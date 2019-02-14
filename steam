@@ -1,8 +1,9 @@
-#!/bin/bash
+#!/bin/bash -x
 
 USER_UID=$(id -u)
 USER_GID=$(id -g)
 
+IMAGE="nvidia-steam"
 NVIDIA_VERSION="$(nvidia-smi -q 2> /dev/null| grep "Driver Version" | awk '{ print $4}')"
 XSOCK=/tmp/.X11-unix
 XAUTH=/tmp/.docker.xauth
@@ -11,39 +12,38 @@ STEAM_DIR=$(readlink -f $HOME/.local/share/Steam)
 [ -z ${NVIDIA_VERSION} ] && echo "Error getting host nvidia driver information.  Please check your nvidia installation and retry." && exit 1
 
 cleanup_stopped_steam_instances(){
-  echo "Cleaning up stopped steam instances..."
-  for c in $(${SUDO} docker ps -a -q)
-  do
-    image="$(${SUDO} docker inspect -f {{.Config.Image}} ${c})"
-    if [ "${image}" == "steawm:latest" ]; then
-      running=$(${SUDO} docker inspect -f {{.State.Running}} ${c})
-      if [ "${running}" != "true" ]; then
-        ${SUDO} docker rm "${c}" >/dev/null
-      fi
-    fi
-  done
+    echo "Cleaning up stopped steam instances..."
+    for c in $(${SUDO} docker ps -a -q); do
+        image="$(${SUDO} docker inspect -f {{.Config.Image}} ${c})"
+        if [ "${image}" == "${IMAGE}" ]; then
+            running=$(${SUDO} docker inspect -f {{.State.Running}} ${c})
+            if [ "${running}" != "true" ]; then
+                ${SUDO} docker rm "${c}" >/dev/null
+            fi
+        fi
+    done
 }
 
 prepare_docker_env_parameters() {
-  ENV_VARS+=" --env=USER_UID=${USER_UID}"
-  ENV_VARS+=" --env=USER_GID=${USER_GID}"
-  ENV_VARS+=" --env=DISPLAY"
-  ENV_VARS+=" --env=XAUTHORITY=${XAUTH}"
-  ENV_VARS+=" --env=TZ=$(date +%Z)"
+    ENV_VARS+=" --env=USER_UID=${USER_UID}"
+    ENV_VARS+=" --env=USER_GID=${USER_GID}"
+    ENV_VARS+=" --env=DISPLAY"
+    ENV_VARS+=" --env=XAUTHORITY=${XAUTH}"
+    ENV_VARS+=" --env=TZ=$(date +%Z)"
 }
 
 prepare_docker_volume_parameters() {
-  touch ${XAUTH}
-  xauth nlist | sed -e 's/^..../ffff/' | xauth -f ${XAUTH} nmerge -
+    touch ${XAUTH}
+    xauth nlist | sed -e 's/^..../ffff/' | xauth -f ${XAUTH} nmerge -
 
-  if [ ! -d ${STEAM_DIR} ] ; then
-      echo "No steam directory found under ~/.local/share. Creating one..."
-      mkdir -p $STEAM_DIR
-  fi
-  VOLUMES+=" --volume=${STEAM_DIR}:/mnt/Steam"
-  VOLUMES+=" --volume /dev/shm:/dev/shm"
-  VOLUMES+=" --volume=${XSOCK}:${XSOCK}"
-  VOLUMES+=" --volume=${XAUTH}:${XAUTH}"
+    if [ ! -d ${STEAM_DIR} ] ; then
+        echo "No steam directory found at ${STEAM_DIR}. Creating it..."
+        mkdir -p $STEAM_DIR
+    fi
+    VOLUMES+=" --volume=${STEAM_DIR}:/mnt/Steam"  # TODO: Why not mount it directly where steam expects it?
+    VOLUMES+=" --volume /dev/shm:/dev/shm"
+    VOLUMES+=" --volume=${XSOCK}:${XSOCK}"
+    VOLUMES+=" --volume=${XAUTH}:${XAUTH}"
 }
 
 
@@ -59,4 +59,4 @@ ${SUDO} docker run -d \
   ${ENV_VARS} \
   ${VOLUMES} \
   --net="host" --privileged \
-  eyehatefim/steam-nvidia:${NVIDIA_VERSION} >/dev/null
+  ${IMAGE}:${NVIDIA_VERSION} >/dev/null

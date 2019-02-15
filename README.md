@@ -19,11 +19,11 @@ I'll try to polish it up soon.
 
 ## Run
 
-`./run.sh`
+`./run.sh [image_id]`
 
 ## TODO
 
-[ ] Merge `run.sh` with fim's executable (`steam`)
-[ ] Is there a better way to handle local Steam profile?
-[ ] Clean up! I'm sure there is useless code both in `Dockerfile` and `run.sh`
-[ ] Install a proper shortcut (at least for Gnome!)
+- [ ] Merge `run.sh` with fim's executable (`steam`)
+- [ ] Is there a better way to handle local Steam profile? Maybe through `.local/share/Steam/steamapps/common`?
+- [ ] Clean up! I'm sure there is useless code both in `Dockerfile` and `run.sh`
+- [ ] Install a proper shortcut (at least for Gnome!)

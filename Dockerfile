@@ -2,6 +2,7 @@ FROM tianon/steam
 
 ARG NVIDIA_VERSION
 VOLUME /home/steam
+VOLUME /home/steam/.local/share/Steam/steamapps
 
 ENV DEBIAN_FRONTEND noninteractive
 ENV SUDO sudo

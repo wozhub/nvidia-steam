@@ -6,7 +6,7 @@ echo ${@}
 
 USER_UID=$(id -u)
 USER_GID=$(id -g)
-DNS=1.1.1.1  
+DNS=${DNS:-1.1.1.1}
 
 
 docker run -ti --ipc=host --init \

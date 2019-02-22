@@ -1,24 +1,37 @@
 FROM tianon/steam
 
-ARG NVIDIA_VERSION
 VOLUME /home/steam
 
 ENV DEBIAN_FRONTEND noninteractive
 ENV SUDO sudo
 
+#
+#
 # TODO: Do we really need all of these?
 RUN ${SUDO} apt-get update && ${SUDO} apt-get install -y \
+        apt-utils \
         mesa-utils \
         curl \
         pciutils \ 
         dbus-x11 \
     && ${SUDO} rm -rf /var/lib/apt/lists/*
 
+#
+#
+# STEAM
+RUN ${SUDO} apt-get update && ${SUDO} apt-get install -y \
+        steam-launcher \
+    && ${SUDO} rm -rf /var/lib/apt/lists/*
 
+#
+#
 # NVIDIA
+ARG NVIDIA_VERSION
+
 RUN test -n "$NVIDIA_VERSION" || ( echo "Please provide nvidia driver version" && exit 1)
 
 ADD NVIDIA-Linux-x86_64-${NVIDIA_VERSION}.run /tmp/nvidia-installer.run
+
 RUN ${SUDO} apt-get update && ${SUDO} apt-get install -y \
         kmod \
     && ${SUDO} rm -rf /var/lib/apt/lists/* \
@@ -29,6 +42,8 @@ RUN ${SUDO} apt-get update && ${SUDO} apt-get install -y \
 # good fonts
 #COPY local.conf /etc/fonts/local.conf
 
+#
+#
 # PulseAudio
 # https://github.com/TheBiggerGuy/docker-pulseaudio-example/blob/master/Dockerfile
 RUN ${SUDO} apt-get update && ${SUDO} apt-get install -y \
@@ -38,11 +53,6 @@ RUN ${SUDO} apt-get update && ${SUDO} apt-get install -y \
 
 # Not sure if usefull with PULSE_SERVER
 # COPY pulse-client.conf /etc/pulse/client.conf
-
-# STEAM
-RUN ${SUDO} apt-get update && ${SUDO} apt-get install -y \
-        steam-launcher \
-    && ${SUDO} rm -rf /var/lib/apt/lists/*
 
 #RUN apt-get install -y /tmp/steam-installer.deb
 #RUN exit 1
@@ -57,4 +67,8 @@ USER steam
 # ADD entrypoint.sh /entrypoint.sh
 
 #CMD ["/entrypoint.sh"]
+
+#RUN ${SUDO} apt-get update && ${SUDO} apt-get -y install sudo
+#RUN echo "steam:steam" | chpasswd && adduser steam sudo
+
 CMD ["steam"]

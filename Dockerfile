@@ -1,6 +1,7 @@
 FROM tianon/steam
 
 VOLUME /home/steam
+VOLUME /home/steam/.local/share/Steam/steamapps
 
 ENV DEBIAN_FRONTEND noninteractive
 ENV SUDO sudo
